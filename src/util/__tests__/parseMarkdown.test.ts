@@ -73,6 +73,24 @@ describe('parseMarkdown', () => {
     expect(parseMarkdown(input)).toBe(expected);
   });
 
+  test('should handle markdown link without protocol', () => {
+    const input = 'Visit [Telegram](telegram.org) for details.';
+    const expected = 'Visit <a href="https://telegram.org">Telegram</a> for details.';
+    expect(parseMarkdown(input)).toBe(expected);
+  });
+
+  test('should handle markdown link with protocol', () => {
+    const input = 'Check out [Google](https://google.com) now.';
+    const expected = 'Check out <a href="https://google.com">Google</a> now.';
+    expect(parseMarkdown(input)).toBe(expected);
+  });
+
+  test('should handle markdown email link', () => {
+    const input = 'Email [Support](support@example.com) for assistance.';
+    const expected = 'Email <a href="mailto:support@example.com">Support</a> for assistance.';
+    expect(parseMarkdown(input)).toBe(expected);
+  });
+
   test('should handle mixed content', () => {
     const input = `
 <div>Hello</div>

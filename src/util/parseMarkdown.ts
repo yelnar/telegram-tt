@@ -44,6 +44,12 @@ interface EmojiNode {
   id: string;
 }
 
+interface LinkNode {
+  type: 'link';
+  text: string;
+  href: string;
+}
+
 type Node =
   | TextNode
   | BoldNode
@@ -52,11 +58,11 @@ type Node =
   | SpoilerNode
   | CodeNode
   | PreNode
-  | EmojiNode;
+  | EmojiNode
+  | LinkNode;
 
 export function parseMarkdown(input: string): string {
   input = normalizeHtml(input);
-
   let index = 0;
 
   function parseNodes(endMarker: string | undefined): Node[] {
@@ -80,18 +86,15 @@ export function parseMarkdown(input: string): string {
       if (input.startsWith('```', index)) {
         flushText();
         index += 3;
-
         let lang = '';
         while (index < input.length && input[index] !== '\n' && input[index] !== '\r') {
           lang += input[index];
           index++;
         }
         lang = lang.trim();
-
         while (index < input.length && (input[index] === '\n' || input[index] === '\r')) {
           index++;
         }
-
         const codeEnd = input.indexOf('```', index);
         let codeContent: string;
         if (codeEnd !== -1) {
@@ -153,6 +156,7 @@ export function parseMarkdown(input: string): string {
         continue;
       }
 
+      // Handling links and custom emojis
       if (input[index] === '[') {
         const closingBracket = input.indexOf(']', index);
         const openingParen = input.indexOf('(', closingBracket);
@@ -164,10 +168,22 @@ export function parseMarkdown(input: string): string {
         ) {
           const label = input.substring(index + 1, closingBracket);
           const inner = input.substring(openingParen + 1, closingParen);
+          // If it's a custom emoji, handle it as before.
           if (inner.startsWith('customEmoji:')) {
             flushText();
             const emojiId = inner.substring('customEmoji:'.length);
             nodes.push({ type: 'emoji', alt: label, id: emojiId });
+            index = closingParen + 1;
+            continue;
+          } else {
+            // Otherwise treat it as a link.
+            flushText();
+            const href = inner.includes('://')
+              ? inner
+              : inner.includes('@')
+                ? `mailto:${inner}`
+                : `https://${inner}`;
+            nodes.push({ type: 'link', text: label, href });
             index = closingParen + 1;
             continue;
           }
@@ -217,8 +233,11 @@ export function parseMarkdown(input: string): string {
             html += `[${node.alt}](customEmoji:${node.id})`;
           }
           break;
+        case 'link':
+          html += `<a href="${node.href}">${node.text}</a>`;
+          break;
         default:
-          html = String(html);
+          html += String(html);
       }
     }
     return html;
