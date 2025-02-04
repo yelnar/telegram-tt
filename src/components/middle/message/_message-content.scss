@@ -1051,12 +1051,16 @@
   font-size: 0.875rem;
 }
 
-@mixin quote-styles {
+blockquote, .blockquote {
+  display: inline-block;
   position: relative;
+  padding-inline: 0.5rem 1rem;
+  margin-block: 0.125rem;
   border-radius: 0.25rem;
   overflow: hidden;
   background-color: var(--accent-background-color);
   white-space: pre-wrap;
+  font-size: calc(var(--message-text-size, 1rem) - 0.125rem);
 
   &::before {
     content: "";
@@ -1079,28 +1083,17 @@
   }
 }
 
-blockquote, .blockquote {
-  @include quote-styles;
-  display: inline-block;
-  padding-inline: 0.5rem 1rem;
-  margin-block: 0.125rem;
-  font-size: calc(var(--message-text-size, 1rem) - 0.125rem);
-}
-
 // Input specific styles
 .blockquote {
   display: block;
   width: fit-content;
-}
 
-q {
-  @include quote-styles;
-  display: inline-block;
-  width: 100%;
-  font-size: inherit;
-  line-height: inherit;
-  padding: 0.5rem 0.75rem;
-  margin: 0.125rem 0;
+  &.within-message {
+    font-size: inherit;
+    line-height: inherit;
+    padding: 0.5rem 1.75rem 0.5rem 0.75rem;
+    margin: 0.25rem 0 0.25rem 0;
+  }
 }
 
 @keyframes text-loading {

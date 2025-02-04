@@ -52,7 +52,7 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   DEL: 'strikethrough',
   CODE: 'monospace',
   SPAN: 'spoiler',
-  Q: 'quote',
+  BLOCKQUOTE: 'quote',
 };
 const fragmentEl = document.createElement('div');
 
@@ -326,7 +326,7 @@ const TextFormatter: FC<OwnProps> = ({
       if (
         !selectedRange
         || !element
-        || element.tagName !== 'Q'
+        || element.tagName !== 'BLOCKQUOTE'
         || !element.textContent
       ) {
         return;
@@ -345,59 +345,11 @@ const TextFormatter: FC<OwnProps> = ({
     if (!selection || selection.rangeCount === 0) {
       return;
     }
-    const range = selection.getRangeAt(0);
-
-    function hasPrecedingBr(r: Range): boolean {
-      const { startContainer, startOffset } = r;
-      if (startContainer.nodeType === Node.TEXT_NODE) {
-        if (startOffset > 0) return false;
-        const prev = startContainer.previousSibling;
-        if (prev && prev.nodeName === 'BR') return true;
-        if (startContainer.parentNode) {
-          const siblings = startContainer.parentNode.childNodes;
-          const idx = Array.prototype.indexOf.call(siblings, startContainer);
-          if (idx > 0 && siblings[idx - 1].nodeName === 'BR') return true;
-        }
-      } else if (startContainer.nodeType === Node.ELEMENT_NODE) {
-        if (startOffset > 0) {
-          const child = startContainer.childNodes[startOffset - 1];
-          if (child && child.nodeName === 'BR') return true;
-        } else if (startContainer.previousSibling && startContainer.previousSibling.nodeName === 'BR') {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    function hasFollowingBr(r: Range): boolean {
-      const { endContainer, endOffset } = r;
-      if (endContainer.nodeType === Node.TEXT_NODE) {
-        if (endOffset < (endContainer.nodeValue?.length || 0)) return false;
-        const next = endContainer.nextSibling;
-        if (next && next.nodeName === 'BR') return true;
-        if (endContainer.parentNode) {
-          const siblings = endContainer.parentNode.childNodes;
-          const idx = Array.prototype.indexOf.call(siblings, endContainer);
-          if (idx < siblings.length - 1 && siblings[idx + 1].nodeName === 'BR') return true;
-        }
-      } else if (endContainer.nodeType === Node.ELEMENT_NODE) {
-        if (endOffset < endContainer.childNodes.length) {
-          const child = endContainer.childNodes[endOffset];
-          if (child && child.nodeName === 'BR') return true;
-        } else if (endContainer.nextSibling && endContainer.nextSibling.nodeName === 'BR') {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    const prefix = hasPrecedingBr(range) ? '' : '<br>';
-    const suffix = hasFollowingBr(range) ? '' : '<br>';
 
     document.execCommand(
       'insertHTML',
       false,
-      `${prefix}<q class="inline-quote">${text}</q>${suffix}`,
+      `<blockquote class="blockquote within-message">${text}</blockquote>`,
     );
     onClose();
   });
