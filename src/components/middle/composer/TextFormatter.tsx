@@ -105,14 +105,16 @@ const TextFormatter: FC<OwnProps> = ({
     }
 
     const selectedFormats: ISelectedTextFormats = {};
-    let { parentElement } = selectedRange.commonAncestorContainer;
-    while (parentElement && parentElement.id !== EDITABLE_INPUT_ID) {
-      const textFormat = TEXT_FORMAT_BY_TAG_NAME[parentElement.tagName];
+    let node = selectedRange.commonAncestorContainer.nodeType === Node.TEXT_NODE
+      ? selectedRange.commonAncestorContainer.parentElement
+      : selectedRange.commonAncestorContainer as HTMLElement;
+    while (node && node.id !== EDITABLE_INPUT_ID) {
+      const textFormat = TEXT_FORMAT_BY_TAG_NAME[node.tagName];
       if (textFormat) {
         selectedFormats[textFormat] = true;
       }
 
-      parentElement = parentElement.parentElement;
+      node = node.parentElement;
     }
 
     setSelectedTextFormats(selectedFormats);
@@ -239,7 +241,7 @@ const TextFormatter: FC<OwnProps> = ({
       Object.keys(selectedFormats).forEach((key) => {
         if ((key === 'italic' || key === 'underline') && Boolean(selectedFormats[key])) {
           document.execCommand(key);
-        }
+      }
       });
 
       updateSelectedRange();
