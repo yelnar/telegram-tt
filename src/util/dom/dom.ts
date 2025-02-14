@@ -91,8 +91,11 @@ function removeNestedTags(fragment: DocumentFragment, tagName: string): void {
  * @param range - The Range object representing the current selection.
  * @param tagName - The formatting tag to check for.
  */
-function applyTag(range: Range, tagName: string): void {
+function applyTag(range: Range, tagName: string, attributes: { [key: string]: string } = {}): void {
   const tagEl = document.createElement(tagName);
+  Object.keys(attributes).forEach((key) => {
+    tagEl.setAttribute(key, attributes[key]);
+  });
   const contents = range.extractContents();
   removeNestedTags(contents, tagName);
   tagEl.appendChild(contents);
@@ -112,6 +115,18 @@ function getAncestorChain(node: Node, stopElement: HTMLElement): HTMLElement[] {
     current = current.parentElement;
   }
   return chain;
+}
+
+/**
+ * Copies all attributes from source element to target element.
+ *
+ * @param source - The element to copy attributes from.
+ * @param target - The element to copy attributes to.
+ */
+function copyAttributes(source: HTMLElement, target: HTMLElement): void {
+  Array.from(source.attributes).forEach((attr) => {
+    target.setAttribute(attr.name, attr.value);
+  });
 }
 
 /**
@@ -166,6 +181,7 @@ function removeTag(range: Range, tagName: string, boundaryId: string): void {
   if (commonChain.length > 0) {
     for (let i = commonChain.length - 1; i >= 0; i--) {
       const wrapper = document.createElement(commonChain[i].tagName.toLowerCase());
+      copyAttributes(commonChain[i], wrapper);
       wrapper.appendChild(finalSelectedFragment);
       finalSelectedFragment = wrapper;
     }
@@ -178,6 +194,7 @@ function removeTag(range: Range, tagName: string, boundaryId: string): void {
 
   if (beforeFragment.childNodes.length > 0) {
     const beforeTag = document.createElement(tagName);
+    copyAttributes(tagEl, beforeTag);
     beforeTag.appendChild(beforeFragment);
     frag.appendChild(beforeTag);
   }
@@ -186,6 +203,7 @@ function removeTag(range: Range, tagName: string, boundaryId: string): void {
 
   if (afterFragment.childNodes.length > 0) {
     const afterTag = document.createElement(tagName);
+    copyAttributes(tagEl, afterTag);
     afterTag.appendChild(afterFragment);
     frag.appendChild(afterTag);
   }
@@ -199,7 +217,7 @@ function removeTag(range: Range, tagName: string, boundaryId: string): void {
  * @param container - The HTMLElement to clean up.
  */
 function cleanupEmptyTags(container: HTMLElement): void {
-  ['b', 'i', 'u', 'del'].forEach((tag) => {
+  ['b', 'i', 'u', 'del', 'code'].forEach((tag) => {
     const tagElements = container.querySelectorAll(tag);
     tagElements.forEach((el) => {
       if (!el.textContent || el.textContent.trim() === '') {
@@ -291,7 +309,7 @@ function mergeAdjacentTags(tagEl: HTMLElement): void {
  * @param boundaryId - The id of the boundary element.
  * @param tagName - The formatting tag name (e.g., 'b', 'i', 'u', 'del').
  */
-function toggleTag(boundaryId: string, tagName: string): void {
+function toggleTag(boundaryId: string, tagName: string, attributes?: { [key: string]: string }): void {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return;
 
@@ -301,7 +319,7 @@ function toggleTag(boundaryId: string, tagName: string): void {
   if (isRangeWithinSameAncestorTag(range, tagName, boundaryId)) {
     removeTag(range, tagName, boundaryId);
   } else {
-    applyTag(range, tagName);
+    applyTag(range, tagName, attributes);
   }
 
   const container = document.getElementById(boundaryId);
@@ -344,4 +362,14 @@ export function toggleUnderline(boundaryId: string): void {
  */
 export function toggleStrikethrough(boundaryId: string): void {
   toggleTag(boundaryId, 'del');
+}
+
+/**
+ * Toggles monospace formatting on the current selection by wrapping it in a
+ * <code class="text-entity-code" dir="auto"></code> tag.
+ *
+ * @param boundaryId - The id of the boundary element.
+ */
+export function toggleMonospace(boundaryId: string): void {
+  toggleTag(boundaryId, 'code', { class: 'text-entity-code', dir: 'auto' });
 }

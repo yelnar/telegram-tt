@@ -12,6 +12,7 @@ import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import {
   toggleBold,
   toggleItalic,
+  toggleMonospace,
   toggleStrikethrough,
   toggleUnderline,
 } from '../../../util/dom/dom';
@@ -257,29 +258,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleMonospaceText = useLastCallback(() => {
-    if (selectedTextFormats.monospace) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.tagName !== 'CODE'
-        || !element.textContent
-      ) {
-        return;
-      }
-
-      element.replaceWith(element.textContent);
-      setSelectedTextFormats((selectedFormats) => ({
-        ...selectedFormats,
-        monospace: false,
-      }));
-
-      return;
-    }
-
-    const text = getSelectedText(true);
-    document.execCommand('insertHTML', false, `<code class="text-entity-code" dir="auto">${text}</code>`);
-    onClose();
+    toggleMonospace(EDITABLE_INPUT_ID);
   });
 
   const handleQuoteText = useLastCallback(() => {

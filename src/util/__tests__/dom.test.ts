@@ -1,4 +1,4 @@
-import { toggleBold } from '../dom/dom';
+import { toggleBold, toggleMonospace } from '../dom/dom';
 
 describe('toggleBold', () => {
   let editor: HTMLElement;
@@ -250,5 +250,53 @@ describe('toggleBold', () => {
         expect(editor.innerHTML).toBe('This is a <b>test content</b>.');
       });
     });
+  });
+});
+
+describe('toggleMonospace', () => {
+  let editor: HTMLElement;
+  const containerId = 'editor';
+
+  beforeEach(() => {
+    document.body.innerHTML = `<div id="${containerId}" contenteditable="true"></div>`;
+    editor = document.getElementById(containerId)!;
+  });
+
+  test('applies monospace formatting to selection', () => {
+    editor.innerHTML = 'This is a test content.';
+
+    const textNode = editor.firstChild as Text;
+    const fullText = textNode.data;
+    const startIndex = fullText.indexOf('test');
+    const endIndex = startIndex + 'test'.length;
+    const range = document.createRange();
+    range.setStart(textNode, startIndex);
+    range.setEnd(textNode, endIndex);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    toggleMonospace(containerId);
+
+    expect(editor.innerHTML).toBe('This is a <code class="text-entity-code" dir="auto">test</code> content.');
+  });
+
+  test('removes monospace formatting from selection', () => {
+    editor.innerHTML = 'This is a <code class="text-entity-code" dir="auto">test</code> content.';
+
+    const codeEl = editor.querySelector('code');
+    expect(codeEl).toBeTruthy();
+
+    const range = document.createRange();
+    range.selectNodeContents(codeEl!);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    toggleMonospace(containerId);
+
+    expect(editor.innerHTML).toBe('This is a test content.');
   });
 });
