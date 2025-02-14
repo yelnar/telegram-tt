@@ -1,4 +1,9 @@
-import { toggleBold, toggleMonospace, toggleSpoiler } from '../dom/dom';
+import {
+  insertLink,
+  toggleBold,
+  toggleMonospace,
+  toggleSpoiler,
+} from '../dom/dom';
 
 describe('toggleBold', () => {
   let editor: HTMLElement;
@@ -346,5 +351,54 @@ describe('toggleSpoiler', () => {
     toggleSpoiler(containerId, 'spoiler');
 
     expect(editor.innerHTML).toBe('This is a test content.');
+  });
+});
+
+describe('updateLink', () => {
+  let editor: HTMLElement;
+  const containerId = 'editor';
+
+  beforeEach(() => {
+    document.body.innerHTML = `<div id="${containerId}" contenteditable="true"></div>`;
+    editor = document.getElementById(containerId)!;
+  });
+
+  test('applies link formatting when selection is plain text', () => {
+    editor.innerHTML = 'This is a test content.';
+    const textNode = editor.firstChild as Text;
+    const startIndex = textNode.data.indexOf('test');
+    const endIndex = startIndex + 'test'.length;
+    const range = document.createRange();
+    range.setStart(textNode, startIndex);
+    range.setEnd(textNode, endIndex);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    insertLink(containerId, range, 'http://example.com');
+
+    expect(editor.innerHTML).toBe(
+      'This is a <a href="http://example.com" class="text-entity-link" dir="auto">test</a> content.',
+    );
+  });
+
+  test('updates href when selection is already linked', () => {
+    editor.innerHTML = 'This is a <a href="http://old.com" class="text-entity-link" dir="auto">test</a> content.';
+
+    const anchorEl = editor.querySelector('a') as HTMLElement;
+    expect(anchorEl).toBeTruthy();
+    const range = document.createRange();
+    range.selectNodeContents(anchorEl);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    insertLink(containerId, range, 'http://new.com');
+
+    expect(editor.innerHTML).toBe(
+      'This is a <a href="http://new.com" class="text-entity-link" dir="auto">test</a> content.',
+    );
   });
 });

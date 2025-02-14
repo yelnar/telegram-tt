@@ -392,3 +392,34 @@ export function toggleSpoiler(boundaryId: string, entityType: string): void {
 export function toggleQuote(boundaryId: string): void {
   toggleTag(boundaryId, 'blockquote', { class: 'blockquote within-message' });
 }
+
+/**
+ * Inserts or updates link formatting on the current selection.
+ * If the selection is already entirely within an <a> element,
+ * its href attribute is updated to the new URL.
+ * Otherwise, the selection is wrapped in a new <a> element.
+ *
+ * @param boundaryId - The id of the contenteditable boundary element.
+ * @param formattedLinkUrl - The new URL to use for the link.
+ */
+export function insertLink(boundaryId: string, range: Range, formattedLinkUrl: string): void {
+  if (range.collapsed) return;
+
+  if (isRangeWithinSameAncestorTag(range, 'a', boundaryId)) {
+    const anchorEl = findAncestorTag(range.startContainer, 'a', boundaryId);
+    if (anchorEl) {
+      (anchorEl as HTMLAnchorElement).href = formattedLinkUrl;
+    }
+  } else {
+    applyTag(range, 'a', {
+      href: formattedLinkUrl,
+      class: 'text-entity-link',
+      dir: 'auto',
+    });
+  }
+
+  const container = document.getElementById(boundaryId);
+  if (container) {
+    cleanupEmptyTags(container);
+  }
+}

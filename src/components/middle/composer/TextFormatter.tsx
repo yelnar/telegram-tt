@@ -10,6 +10,7 @@ import { EDITABLE_INPUT_ID } from '../../../config';
 import buildClassName from '../../../util/buildClassName';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import {
+  insertLink,
   toggleBold,
   toggleItalic,
   toggleMonospace,
@@ -79,7 +80,6 @@ const TextFormatter: FC<OwnProps> = ({
   const { shouldRender, transitionClassNames } = useShowTransitionDeprecated(isOpen);
   const [isLinkControlOpen, openLinkControl, closeLinkControl] = useFlag();
   const [linkUrl, setLinkUrl] = useState('');
-  const [isEditingLink, setIsEditingLink] = useState(false);
   const [inputClassName, setInputClassName] = useState<string | undefined>();
   const [selectedTextFormats, setSelectedTextFormats] = useState<ISelectedTextFormats>({});
 
@@ -96,7 +96,6 @@ const TextFormatter: FC<OwnProps> = ({
       linkUrlInputRef.current!.focus();
     } else {
       setLinkUrl('');
-      setIsEditingLink(false);
     }
   }, [isLinkControlOpen]);
 
@@ -237,28 +236,11 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleLinkUrlConfirm = useLastCallback(() => {
-    const formattedLinkUrl = (ensureProtocol(linkUrl) || '').split('%').map(encodeURI).join('%');
-
-    if (isEditingLink) {
-      const element = getSelectedElement();
-      if (!element || element.tagName !== 'A') {
-        return;
-      }
-
-      (element as HTMLAnchorElement).href = formattedLinkUrl;
-
-      onClose();
-
+    if (!selectedRange) {
       return;
     }
-
-    const text = getSelectedText(true);
-    restoreSelection();
-    document.execCommand(
-      'insertHTML',
-      false,
-      `<a href=${formattedLinkUrl} class="text-entity-link" dir="auto">${text}</a>`,
-    );
+    const formattedLinkUrl = (ensureProtocol(linkUrl) || '').split('%').map(encodeURI).join('%');
+    insertLink(EDITABLE_INPUT_ID, selectedRange, formattedLinkUrl);
     onClose();
   });
 
