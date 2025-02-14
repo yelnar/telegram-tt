@@ -1,4 +1,4 @@
-import { toggleBold, toggleMonospace } from '../dom/dom';
+import { toggleBold, toggleMonospace, toggleSpoiler } from '../dom/dom';
 
 describe('toggleBold', () => {
   let editor: HTMLElement;
@@ -296,6 +296,54 @@ describe('toggleMonospace', () => {
     selection?.addRange(range);
 
     toggleMonospace(containerId);
+
+    expect(editor.innerHTML).toBe('This is a test content.');
+  });
+});
+
+describe('toggleSpoiler', () => {
+  let editor: HTMLElement;
+  const containerId = 'editor';
+
+  beforeEach(() => {
+    document.body.innerHTML = `<div id="${containerId}" contenteditable="true"></div>`;
+    editor = document.getElementById(containerId)!;
+  });
+
+  test('applies spoiler formatting to selection', () => {
+    editor.innerHTML = 'This is a test content.';
+
+    const textNode = editor.firstChild as Text;
+    const fullText = textNode.data;
+    const startIndex = fullText.indexOf('test');
+    const endIndex = startIndex + 'test'.length;
+    const range = document.createRange();
+    range.setStart(textNode, startIndex);
+    range.setEnd(textNode, endIndex);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    toggleSpoiler(containerId, 'spoiler');
+
+    expect(editor.innerHTML).toBe('This is a <span class="spoiler" data-entity-type="spoiler">test</span> content.');
+  });
+
+  test('removes spoiler formatting from selection', () => {
+    editor.innerHTML = 'This is a <span class="spoiler" data-entity-type="spoiler">test</span> content.';
+
+    const spoilerEl = editor.querySelector('span.spoiler');
+    expect(spoilerEl).toBeTruthy();
+
+    const range = document.createRange();
+    range.selectNodeContents(spoilerEl!);
+
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+
+    toggleSpoiler(containerId, 'spoiler');
 
     expect(editor.innerHTML).toBe('This is a test content.');
   });

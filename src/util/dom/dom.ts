@@ -217,7 +217,7 @@ function removeTag(range: Range, tagName: string, boundaryId: string): void {
  * @param container - The HTMLElement to clean up.
  */
 function cleanupEmptyTags(container: HTMLElement): void {
-  ['b', 'i', 'u', 'del', 'code'].forEach((tag) => {
+  ['b', 'i', 'u', 'del', 'code', 'span'].forEach((tag) => {
     const tagElements = container.querySelectorAll(tag);
     tagElements.forEach((el) => {
       if (!el.textContent || el.textContent.trim() === '') {
@@ -372,4 +372,14 @@ export function toggleStrikethrough(boundaryId: string): void {
  */
 export function toggleMonospace(boundaryId: string): void {
   toggleTag(boundaryId, 'code', { class: 'text-entity-code', dir: 'auto' });
+}
+
+/**
+ * Toggles spoiler formatting on the current selection.
+ * This wraps the selection in a <span> element with class "spoiler" and a data attribute.
+ *
+ * @param boundaryId - The id of the boundary element.
+ */
+export function toggleSpoiler(boundaryId: string, entityType: string): void {
+  toggleTag(boundaryId, 'span', { class: 'spoiler', 'data-entity-type': entityType });
 }

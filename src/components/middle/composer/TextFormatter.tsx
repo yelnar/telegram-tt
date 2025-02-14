@@ -13,6 +13,7 @@ import {
   toggleBold,
   toggleItalic,
   toggleMonospace,
+  toggleSpoiler,
   toggleStrikethrough,
   toggleUnderline,
 } from '../../../util/dom/dom';
@@ -214,31 +215,7 @@ const TextFormatter: FC<OwnProps> = ({
   }
 
   const handleSpoilerText = useLastCallback(() => {
-    if (selectedTextFormats.spoiler) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.dataset.entityType !== ApiMessageEntityTypes.Spoiler
-        || !element.textContent
-      ) {
-        return;
-      }
-
-      element.replaceWith(element.textContent);
-      setSelectedTextFormats((selectedFormats) => ({
-        ...selectedFormats,
-        spoiler: false,
-      }));
-
-      return;
-    }
-
-    const text = getSelectedText();
-    document.execCommand(
-      'insertHTML', false, `<span class="spoiler" data-entity-type="${ApiMessageEntityTypes.Spoiler}">${text}</span>`,
-    );
-    onClose();
+    toggleSpoiler(EDITABLE_INPUT_ID, ApiMessageEntityTypes.Spoiler);
   });
 
   const handleBoldText = useLastCallback(() => {
