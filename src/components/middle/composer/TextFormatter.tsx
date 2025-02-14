@@ -13,6 +13,7 @@ import {
   toggleBold,
   toggleItalic,
   toggleMonospace,
+  toggleQuote,
   toggleSpoiler,
   toggleStrikethrough,
   toggleUnderline,
@@ -140,13 +141,6 @@ const TextFormatter: FC<OwnProps> = ({
     }
   });
 
-  const updateSelectedRange = useLastCallback(() => {
-    const selection = window.getSelection();
-    if (selection) {
-      setSelectedRange(selection.getRangeAt(0));
-    }
-  });
-
   const getSelectedText = useLastCallback((shouldDropCustomEmoji?: boolean) => {
     if (!selectedRange) {
       return undefined;
@@ -239,37 +233,7 @@ const TextFormatter: FC<OwnProps> = ({
   });
 
   const handleQuoteText = useLastCallback(() => {
-    if (selectedTextFormats.quote) {
-      const element = getSelectedElement();
-      if (
-        !selectedRange
-        || !element
-        || element.tagName !== 'BLOCKQUOTE'
-        || !element.textContent
-      ) {
-        return;
-      }
-
-      element.replaceWith(element.textContent);
-      setSelectedTextFormats((selectedFormats) => ({
-        ...selectedFormats,
-        quote: false,
-      }));
-      return;
-    }
-
-    const text = getSelectedText();
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      return;
-    }
-
-    document.execCommand(
-      'insertHTML',
-      false,
-      `<blockquote class="blockquote within-message">${text}</blockquote>`,
-    );
-    onClose();
+    toggleQuote(EDITABLE_INPUT_ID);
   });
 
   const handleLinkUrlConfirm = useLastCallback(() => {
