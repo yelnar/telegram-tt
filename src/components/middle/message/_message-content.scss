@@ -1075,12 +1075,10 @@ blockquote, .blockquote {
   &::after {
     @include icons.icon;
     content: map.get(icons.$icons-map, "quote");
-
     color: var(--accent-color);
     position: absolute;
     top: 0.25rem;
     inset-inline-end: 0.25rem;
-
     font-size: 0.625rem;
   }
 }
@@ -1089,6 +1087,13 @@ blockquote, .blockquote {
 .blockquote {
   display: block;
   width: fit-content;
+
+  &.within-message {
+    font-size: inherit;
+    line-height: inherit;
+    padding: 0.5rem 1.75rem 0.5rem 0.75rem;
+    margin: 0.25rem 0 0.25rem 0;
+  }
 }
 
 @keyframes text-loading {

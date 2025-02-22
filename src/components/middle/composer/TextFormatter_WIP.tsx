@@ -11,18 +11,13 @@ import buildClassName from '../../../util/buildClassName';
 import captureEscKeyListener from '../../../util/captureEscKeyListener';
 import {
   insertLink,
-  toggleBold,
-  toggleItalic,
   toggleMonospace,
   toggleQuote,
   toggleSpoiler,
-  toggleStrikethrough,
-  toggleUnderline,
 } from '../../../util/dom/dom';
 import { ensureProtocol } from '../../../util/ensureProtocol';
 import getKeyFromEvent from '../../../util/getKeyFromEvent';
 import stopEvent from '../../../util/stopEvent';
-import { INPUT_CUSTOM_EMOJI_SELECTOR } from './helpers/customEmoji';
 
 import useFlag from '../../../hooks/useFlag';
 import useLastCallback from '../../../hooks/useLastCallback';
@@ -39,8 +34,12 @@ export type OwnProps = {
   isOpen: boolean;
   anchorPosition?: IAnchorPosition;
   selectedRange?: Range;
-  setSelectedRange: (range: Range) => void;
+  // setSelectedRange: (range: Range) => void;
   onClose: () => void;
+  onToggleBold: () => void;
+  onToggleItalic: () => void;
+  onToggleUnderline: () => void;
+  onToggleStrikethrough: () => void;
 };
 
 interface ISelectedTextFormats {
@@ -64,13 +63,16 @@ const TEXT_FORMAT_BY_TAG_NAME: Record<string, keyof ISelectedTextFormats> = {
   SPAN: 'spoiler',
   BLOCKQUOTE: 'quote',
 };
-const fragmentEl = document.createElement('div');
 
 const TextFormatter: FC<OwnProps> = ({
   isOpen,
   anchorPosition,
   selectedRange,
-  setSelectedRange,
+  // setSelectedRange,
+  onToggleBold,
+  onToggleItalic,
+  onToggleUnderline,
+  onToggleStrikethrough,
   onClose,
 }) => {
   // eslint-disable-next-line no-null/no-null
@@ -107,59 +109,26 @@ const TextFormatter: FC<OwnProps> = ({
     }
   }, [closeLinkControl, shouldRender]);
 
-  useEffect(() => {
-    if (!isOpen || !selectedRange) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (!isOpen || !selectedRange) {
+  //     return;
+  //   }
 
-    const selectedFormats: ISelectedTextFormats = {};
-    let node = selectedRange.commonAncestorContainer.nodeType === Node.TEXT_NODE
-      ? selectedRange.commonAncestorContainer.parentElement
-      : selectedRange.commonAncestorContainer as HTMLElement;
-    while (node && node.id !== EDITABLE_INPUT_ID) {
-      const textFormat = TEXT_FORMAT_BY_TAG_NAME[node.tagName];
-      if (textFormat) {
-        selectedFormats[textFormat] = true;
-      }
+  //   const selectedFormats: ISelectedTextFormats = {};
+  //   let node = selectedRange.commonAncestorContainer.nodeType === Node.TEXT_NODE
+  //     ? selectedRange.commonAncestorContainer.parentElement
+  //     : selectedRange.commonAncestorContainer as HTMLElement;
+  //   while (node && node.id !== EDITABLE_INPUT_ID) {
+  //     const textFormat = TEXT_FORMAT_BY_TAG_NAME[node.tagName];
+  //     if (textFormat) {
+  //       selectedFormats[textFormat] = true;
+  //     }
 
-      node = node.parentElement;
-    }
+  //     node = node.parentElement;
+  //   }
 
-    setSelectedTextFormats(selectedFormats);
-  }, [isOpen, selectedRange, openLinkControl]);
-
-  const restoreSelection = useLastCallback(() => {
-    if (!selectedRange) {
-      return;
-    }
-
-    const selection = window.getSelection();
-    if (selection) {
-      selection.removeAllRanges();
-      selection.addRange(selectedRange);
-    }
-  });
-
-  const getSelectedText = useLastCallback((shouldDropCustomEmoji?: boolean) => {
-    if (!selectedRange) {
-      return undefined;
-    }
-    fragmentEl.replaceChildren(selectedRange.cloneContents());
-    if (shouldDropCustomEmoji) {
-      fragmentEl.querySelectorAll(INPUT_CUSTOM_EMOJI_SELECTOR).forEach((el) => {
-        el.replaceWith(el.getAttribute('alt')!);
-      });
-    }
-    return fragmentEl.innerHTML;
-  });
-
-  const getSelectedElement = useLastCallback(() => {
-    if (!selectedRange) {
-      return undefined;
-    }
-
-    return selectedRange.commonAncestorContainer.parentElement;
-  });
+  //   setSelectedTextFormats(selectedFormats);
+  // }, [isOpen, selectedRange, openLinkControl]);
 
   function updateInputStyles() {
     const input = linkUrlInputRef.current;
@@ -211,22 +180,6 @@ const TextFormatter: FC<OwnProps> = ({
     toggleSpoiler(EDITABLE_INPUT_ID, ApiMessageEntityTypes.Spoiler);
   });
 
-  const handleBoldText = useLastCallback(() => {
-    toggleBold(EDITABLE_INPUT_ID);
-  });
-
-  const handleItalicText = useLastCallback(() => {
-    toggleItalic(EDITABLE_INPUT_ID);
-  });
-
-  const handleUnderlineText = useLastCallback(() => {
-    toggleUnderline(EDITABLE_INPUT_ID);
-  });
-
-  const handleStrikethroughText = useLastCallback(() => {
-    toggleStrikethrough(EDITABLE_INPUT_ID);
-  });
-
   const handleMonospaceText = useLastCallback(() => {
     toggleMonospace(EDITABLE_INPUT_ID);
   });
@@ -247,11 +200,11 @@ const TextFormatter: FC<OwnProps> = ({
   const handleKeyDown = useLastCallback((e: KeyboardEvent) => {
     const HANDLERS_BY_KEY: Record<string, AnyToVoidFunction> = {
       k: openLinkControl,
-      b: handleBoldText,
-      u: handleUnderlineText,
-      i: handleItalicText,
+      b: onToggleBold,
+      u: onToggleUnderline,
+      i: onToggleItalic,
       m: handleMonospaceText,
-      s: handleStrikethroughText,
+      s: onToggleStrikethrough,
       p: handleSpoilerText,
       q: handleQuoteText,
     };
@@ -330,7 +283,7 @@ const TextFormatter: FC<OwnProps> = ({
           color="translucent"
           ariaLabel="Bold text"
           className={getFormatButtonClassName('bold')}
-          onClick={handleBoldText}
+          onClick={onToggleBold}
         >
           <Icon name="bold" />
         </Button>
@@ -338,7 +291,7 @@ const TextFormatter: FC<OwnProps> = ({
           color="translucent"
           ariaLabel="Italic text"
           className={getFormatButtonClassName('italic')}
-          onClick={handleItalicText}
+          onClick={onToggleItalic}
         >
           <Icon name="italic" />
         </Button>
@@ -346,7 +299,7 @@ const TextFormatter: FC<OwnProps> = ({
           color="translucent"
           ariaLabel="Underlined text"
           className={getFormatButtonClassName('underline')}
-          onClick={handleUnderlineText}
+          onClick={onToggleUnderline}
         >
           <Icon name="underlined" />
         </Button>
@@ -354,7 +307,7 @@ const TextFormatter: FC<OwnProps> = ({
           color="translucent"
           ariaLabel="Strikethrough text"
           className={getFormatButtonClassName('strikethrough')}
-          onClick={handleStrikethroughText}
+          onClick={onToggleStrikethrough}
         >
           <Icon name="strikethrough" />
         </Button>

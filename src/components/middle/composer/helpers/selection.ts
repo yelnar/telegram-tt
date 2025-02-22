@@ -1,4 +1,4 @@
-const MAX_NESTING_PARENTS = 5;
+const MAX_NESTING_PARENTS = 10;
 
 export function isSelectionInsideInput(selectionRange: Range, inputId: string) {
   const { commonAncestorContainer } = selectionRange;
